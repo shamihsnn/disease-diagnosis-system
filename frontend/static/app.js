@@ -6,7 +6,7 @@ class DiseaseUI {
                 'fever', 'high_fever', 'prolonged_fever'
             ],
             'Respiratory': [
-                'cough', 'shortness_of_breath', 'sore_throat', 
+                'cough', 'shortness_of_breath', 'sore_throat',
                 'congestion_runny_nose', 'loss_taste_smell'
             ],
             'Body Pain': [
@@ -14,11 +14,11 @@ class DiseaseUI {
                 'severe_headache', 'headache', 'pain_behind_eyes'
             ],
             'Digestive': [
-                'nausea_vomiting', 'diarrhea', 'constipation', 
+                'nausea_vomiting', 'diarrhea', 'constipation',
                 'abdominal_pain'
             ],
             'Other': [
-                'fatigue', 'weakness_fatigue', 'skin_rash', 
+                'fatigue', 'weakness_fatigue', 'skin_rash',
                 'mild_bleeding', 'chills', 'sweats', 'rose_spots'
             ]
         };
@@ -27,7 +27,7 @@ class DiseaseUI {
 
     initializeUI() {
         const container = document.getElementById('symptom-container');
-        
+
         Object.entries(this.symptomCategories).forEach(([category, symptoms]) => {
             const section = this.createCategorySection(category, symptoms);
             container.appendChild(section);
@@ -40,35 +40,35 @@ class DiseaseUI {
     createCategorySection(category, symptoms) {
         const section = document.createElement('div');
         section.className = 'symptom-category';
-        
+
         const heading = document.createElement('h3');
         heading.textContent = category;
         section.appendChild(heading);
-        
+
         symptoms.forEach(symptom => {
             const item = this.createSymptomItem(symptom);
             section.appendChild(item);
         });
-        
+
         return section;
     }
 
     createSymptomItem(symptom) {
         const wrapper = document.createElement('div');
         wrapper.className = 'symptom-item';
-        
+
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = symptom;
         checkbox.addEventListener('change', () => this.updateSymptoms(symptom));
-        
+
         const label = document.createElement('label');
         label.htmlFor = symptom;
         label.textContent = this.formatSymptomLabel(symptom);
-        
+
         wrapper.appendChild(checkbox);
         wrapper.appendChild(label);
-        
+
         return wrapper;
     }
 
@@ -93,54 +93,59 @@ class DiseaseUI {
     }
 
     // Method to analyze disease
-analyzeDisease = async () => {
-    if (this.symptoms.size === 0) {
-        this.showMessage('Please select at least one symptom');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/diagnose', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                symptoms: Array.from(this.symptoms)
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+    analyzeDisease = async () => {
+        if (this.symptoms.size === 0) {
+            this.showMessage('Please select at least one symptom');
+            return;
         }
 
-        const results = await response.json();
-        this.displayResults(results);
-    } catch (error) {
-        this.showMessage('Error analyzing symptoms. Please try again.');
-        console.error('Analysis error:', error);
+        try {
+            const response = await fetch('/api/diagnose', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    symptoms: Array.from(this.symptoms)
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const results = await response.json();
+            this.displayResults(results);
+        } catch (error) {
+            this.showMessage('Error analyzing symptoms. Please try again.');
+            console.error('Analysis error:', error);
+        }
     }
-}
 
-// Method to display results
-displayResults = (results) => {
-    const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = '';
+    // Method to display results
+    displayResults(results) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
 
-    const heading = document.createElement('h3');
-    heading.textContent = 'Diagnosis Results';
-    resultsDiv.appendChild(heading);
+        const heading = document.createElement('h3');
+        heading.textContent = 'Diagnosis Results';
+        resultsDiv.appendChild(heading);
 
-    results.forEach(([disease, confidence]) => {
-        const resultItem = document.createElement('div');
-        resultItem.className = 'result-item';
-        resultItem.innerHTML = `
+        console.log('API Response:', results);
+
+        // Handle the nested results structure
+        const diagnosisResults = results.results || results;
+
+        diagnosisResults.forEach(([disease, confidence]) => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            resultItem.innerHTML = `
             <strong>${disease}</strong>: 
-            Confidence ${confidence.toFixed(2)}%
+            ${confidence.toFixed(2)}% confidence
         `;
-        resultsDiv.appendChild(resultItem);
-    });
-}
+            resultsDiv.appendChild(resultItem);
+        });
+    }
 
 }
 
